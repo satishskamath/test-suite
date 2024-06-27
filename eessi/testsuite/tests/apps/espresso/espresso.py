@@ -63,7 +63,7 @@ class EESSI_ESPRESSO(rfm.RunOnlyRegressionTest):
         """ Setting an extra job option of memory. Here the assumption made is that HPC systems will contain at
         least 1 GB per core of memory."""
         mem_required_per_node = self.num_tasks_per_node * 0.9
-        hooks.req_memory_per_node(test=self, app_mem_req=mem_required_per_node)
+        hooks.req_memory_per_node(test=self, app_mem_req=mem_required_per_node * 1024)
 
     @deferrable
     def assert_completion(self):
