@@ -108,6 +108,8 @@ class EESSI_ESPRESSO_P3M_IONIC_CRYSTALS(EESSI_ESPRESSO):
     executable = 'python3 madelung.py'
 
     default_weak_scaling_system_size = 6
+    default_cao = 7
+    default_mesh_per_core = 64
 
     @run_after('init')
     def set_tag_ci(self):
@@ -125,7 +127,11 @@ class EESSI_ESPRESSO_P3M_IONIC_CRYSTALS(EESSI_ESPRESSO):
         hooks.check_custom_executable_opts(self, num_default=num_default)
         # By default we run weak scaling since the strong scaling sizes need to change based on max node size and a
         # corresponding min node size has to be chozen.
-        self.executable_opts += ['--size', str(self.default_weak_scaling_system_size), '--weak-scaling']
+        # Fixing mesh per core to make the tests faster.
+        self.executable_opts += ['--size', str(self.default_weak_scaling_system_size),
+                                 '--cao', str(self.default_cao),
+                                 '--mesh-per-core', str(self.default_mesh_per_core),
+                                 '--weak-scaling']
         utils.log(f'executable_opts set to {self.executable_opts}')
 
     @run_after('setup')

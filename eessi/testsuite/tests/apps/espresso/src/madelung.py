@@ -34,6 +34,13 @@ parser.add_argument("--gpu", action=argparse.BooleanOptionalAction,
                     default=False, required=False, help="Use GPU implementation")
 parser.add_argument("--topology", metavar=("X", "Y", "Z"), nargs=3, action="store",
                     default=None, required=False, type=int, help="Cartesian topology")
+parser.add_argument("--cao", type=int, default=None, required=False,
+                    help="Charge assignment order")
+group = parser.add_mutually_exclusive_group()
+group.add_argument("--mesh-per-core", type=int, default=None, required=False,
+                    help="Mesh size per core")
+group.add_argument("--mesh", type=int, default=None, required=False,
+                    help="Mesh size")
 group = parser.add_mutually_exclusive_group()
 group.add_argument("--weak-scaling", action="store_true",
                    help="Weak scaling benchmark (Gustafson's law: constant work per core)")
@@ -86,7 +93,20 @@ for var_j in range(lattice_size[0]):
 algorithm = espressomd.electrostatics.P3M
 if args.gpu:
     algorithm = espressomd.electrostatics.P3MGPU
-solver = algorithm(prefactor=1., accuracy=1e-6)
+kwargs = {}
+if args.mesh:
+    kwargs["mesh"] = np.array(args.mesh)
+if args.mesh_per_core:
+    assert args.weak_scaling
+    kwargs["mesh"] = args.mesh_per_core * np.copy(system.cell_system.node_grid)
+if args.cao:
+    assert args.cao >= 1 and args.cao <= 7
+    kwargs["cao"] = args.cao
+if "mesh" in kwargs:
+    assert np.all(kwargs["mesh"] >= 2)
+    assert np.all(kwargs["mesh"] % 2 == 0)
+solver = algorithm(prefactor=1., accuracy=1e-6, **kwargs)
+
 if (espressomd.version.major(), espressomd.version.minor()) == (4, 2):
     system.actors.add(solver)
 else:
